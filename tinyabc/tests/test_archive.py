@@ -43,3 +43,9 @@ class TestOgawa(unittest.TestCase):
         self.assertEqual(archive.max_sample, 0)
         self.assertEqual(archive.time_per_cycle, 1.0)
         self.assertEqual(len(archive.samples), 1)
+
+    def test_cube_blender_samples(self):
+        archive = Archive.from_filename(get_fixture("test_blender_cube.abc"))
+        self.assertEqual(archive.max_sample, 1)
+        self.assertEqual(archive.time_per_cycle, 1.0)
+        self.assertEqual(len(archive.samples), 1)

@@ -57,7 +57,11 @@ class Object:
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            key = [i for i, o in enumerate(self.children) if o.name == key][0]
+            matching = [i for i, o in enumerate(self.children) if o.name == key]
+            if matching:
+                key = matching[0]
+            else:
+                raise KeyError(key)
         return self.children[key]
 
 

@@ -126,3 +126,27 @@ class TestOgawa(unittest.TestCase):
             ].name,
             "Node_001_001_002_001",
         )
+
+    def test_blender_cube_tree_wrong_path(self):
+        archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
+        self.assertRaises(
+            KeyError,
+            archive.__getitem__,
+            "/Node_001/Node_001_001/Node_001_002_002/Node_001_001_002_001",
+        )
+
+    def test_blender_cube_tree_wrong_name(self):
+        archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
+        self.assertRaises(
+            KeyError,
+            archive.root.__getitem__,
+            "Node_Test",
+        )
+
+    def test_blender_cube_tree_wrong_index(self):
+        archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
+        self.assertRaises(
+            IndexError,
+            archive.root.__getitem__,
+            999,
+        )

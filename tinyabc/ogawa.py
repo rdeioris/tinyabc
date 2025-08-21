@@ -26,7 +26,10 @@ class Ogawa:
         def is_data(self, _index):
             return isinstance(self.children[_index], Ogawa.Data)
 
-        def get_data(self, _index):
+        def get_data(self, _index) -> Ogawa.Data:
+            return self.children[_index]
+
+        def get_group(self, _index) -> Ogawa.Group:
             return self.children[_index]
 
     class Data:

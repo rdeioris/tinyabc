@@ -41,7 +41,9 @@ class Archive:
         self.samples = []
         num_samples = self.storage.root.get_data(4).read_u32(12)
         for i in range(0, num_samples):
-            self.samples.append(self.storage.root.get_data(4).read_f64(12 + (i * 8)))
+            self.samples.append(
+                self.storage.root.get_data(4).read_f64(12 + 4 + (i * 8))
+            )
 
         if not self.storage.root.is_data(5):
             raise ArchiveException("Expected node 3 (indexed_metadata) to be data")
@@ -57,6 +59,10 @@ class Archive:
             ]
             offset += metadata_size
             self.indexed_metadata.append(metadata)
+
+        self.root = Object(
+            self, None, "ABC", self.metadata, self.storage.root.get_group(2)
+        )
 
     @staticmethod
     def from_filename(filename):
@@ -77,3 +83,12 @@ class Archive:
     @staticmethod
     def from_buffer(data):
         return Archive(Ogawa(data))
+
+    def __getitem__(self, key):
+        if not key.startswith("/"):
+            raise ArchiveException("Object path has to start with a /")
+        parts = key.split("/")
+        item = self.root
+        for part in parts[1:]:
+            item = item[part]
+        return item

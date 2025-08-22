@@ -1,6 +1,6 @@
 from .ogawa import Ogawa
-from .schema import Object
 from .properties import CompoundProperty
+from .schema import registered_schemas
 
 
 class ArchiveException(Exception):
@@ -163,3 +163,9 @@ class Object:
             else:
                 raise KeyError(key)
         return self.children[key]
+
+    def get_schema(self):
+        return self.metadata["schema"]
+
+    def to_schema(self):
+        return registered_schemas[self.get_schema()](self)

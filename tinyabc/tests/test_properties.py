@@ -13,7 +13,7 @@ class TestProperties(unittest.TestCase):
         )
         self.assertEqual(tree[".xform"][".ops"], [48, 48, 48, 48, 48, 48])
         self.assertEqual(tree[".xform"]["isNotConstantIdentity"], [True])
-        self.assertEqual(tree[".xform"][".animChans"], [13])
+        self.assertEqual(tree[".xform"][".animChans"], [[13]])
         # fmt: off
         self.assertEqual(
             tree[".xform"][".vals"],
@@ -166,3 +166,13 @@ class TestProperties(unittest.TestCase):
                 }
             },
         )
+
+    def test_blender_cone_vertex_colors(self):
+        archive = Archive.from_filename(get_fixture("test_blender_cone.abc"))
+        vertex_colors = archive["/Cone/Mesh"].properties[".geom"][".arbGeomParams"][
+            "Attribute"
+        ]
+        self.assertAlmostEqual(vertex_colors[".vals"].num_samples, 1)
+        self.assertAlmostEqual(vertex_colors[".vals"].num_elements, 128)
+        self.assertAlmostEqual(vertex_colors[".indices"].num_samples, 1)
+        self.assertAlmostEqual(vertex_colors[".indices"].num_elements, 128)

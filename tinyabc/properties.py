@@ -1,74 +1,9 @@
 import struct
+import math
 
 
-class Object:
-    def __init__(self, archive, parent, name, metadata, tree):
-        self.parent = parent
-        self.name = name
-        self.metadata = metadata
-        self.children = []
-
-        self.properties = CompoundProperty("", archive, tree.children[0])
-
-        if not tree:
-            return
-
-        # retrieve children
-        objects_headers_group = tree.get_data(-1)
-        objects_headers_group_size = objects_headers_group.size
-
-        objects_headers_size = objects_headers_group_size - 32
-
-        offset = 0
-        child_object_index = 0
-        while offset < objects_headers_size:
-            child_name_size = objects_headers_group.read_u32(offset)
-            offset += 4
-            child_name = bytes(
-                objects_headers_group.view[offset : offset + child_name_size]
-            ).decode(archive.encoding)
-            offset += child_name_size
-            child_metadata_index_or_size = objects_headers_group.read_u8(offset)
-            offset += 1
-            if child_metadata_index_or_size < len(archive.indexed_metadata):
-                child_metadata = self._build_metadata(
-                    archive.indexed_metadata[child_metadata_index_or_size],
-                    archive.encoding,
-                )
-            else:
-                child_inline_metadata = objects_headers_group.view[
-                    offset : offset + child_metadata_index_or_size
-                ]
-                offset += child_metadata_index_or_size
-                child_metadata = self._build_metadata(
-                    child_inline_metadata, archive.encoding
-                )
-            self.children.append(
-                Object(
-                    archive,
-                    self,
-                    child_name,
-                    child_metadata,
-                    tree.children[child_object_index + 1],
-                )
-            )
-            child_object_index += 1
-
-    def _build_metadata(self, blob, encoding):
-        metadata = {}
-        for item in bytes(blob).split(b";"):
-            key, value = item.split(b"=")
-            metadata[key.decode(encoding)] = value.decode(encoding)
-        return metadata
-
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            matching = [i for i, o in enumerate(self.children) if o.name == key]
-            if matching:
-                key = matching[0]
-            else:
-                raise KeyError(key)
-        return self.children[key]
+class PropertyException(Exception):
+    pass
 
 
 class CompoundProperty:
@@ -201,6 +136,15 @@ class CompoundProperty:
             _process_property(tree, child)
         return tree
 
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            matching = [i for i, o in enumerate(self.children) if o.name == key]
+            if matching:
+                key = matching[0]
+            else:
+                raise KeyError(key)
+        return self.children[key]
+
 
 class Property:
     def __init__(
@@ -223,6 +167,11 @@ class Property:
         self.last_changed_index = last_changed_index
         self.metadata = meta
         self.setup_frames(node)
+
+    def get_pod_size(self):
+        if self.pod_type_format not in ("string", "wstring"):
+            return struct.calcsize(self.pod_type_format) * self.extent
+        raise PropertyException("Unsupported pod type: {}".format(self.pod_type_format))
 
     def get_sample(self, _index, encoder=None):
         if _index >= self.next_sample_index or _index < 0:
@@ -249,4 +198,12 @@ class ScalarProperty(Property):
 class ArrayProperty(Property):
     def setup_frames(self, node):
         self.frames = [child.view[16:] for child in node.children[::2]]
-        self.dims = [struct.unpack("<I", child.view) if child.size > 0 else node.children[_index-1].size / 1 for _index, child in enumerate(node.children[1::2])]
+        self.dims = [
+            (
+                struct.unpack("<I", child.view)
+                if child.size > 0
+                else (node.children[_index * 2].size - 16) // self.get_pod_size()
+            )
+            for _index, child in enumerate(node.children[1::2])
+        ]
+        self.num_elements = math.prod(self.dims)

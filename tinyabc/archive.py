@@ -1,5 +1,5 @@
 from .ogawa import Ogawa
-from .schema import Object, Property
+from .schema import Object
 
 
 class ArchiveException(Exception):

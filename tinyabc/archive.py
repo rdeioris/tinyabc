@@ -167,5 +167,7 @@ class Object:
     def get_schema(self):
         return self.metadata["schema"]
 
-    def to_schema(self):
-        return registered_schemas[self.get_schema()](self)
+    def to_schema(self, default_property_encoder=None):
+        return registered_schemas[self.get_schema()](
+            self, default_property_encoder=default_property_encoder
+        )

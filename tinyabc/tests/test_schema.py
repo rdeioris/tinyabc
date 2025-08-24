@@ -1,7 +1,7 @@
 import unittest
 from tinyabc.archive import Archive
 from tinyabc.schema import AbcGeom_PolyMesh_v1
-from .utils import get_fixture
+from .utils import get_fixture, struct_property_encoder
 from tinyabc.encoders import numpy_property
 
 try:
@@ -30,3 +30,8 @@ class TestSchema(unittest.TestCase):
         positions = polymesh.get_P(encoder=numpy_property)
         self.assertEqual(len(face_indices), 128)
         self.assertEqual(len(positions), 33)
+
+    def test_blender_vertex_anim(self):
+        archive = Archive.from_filename(get_fixture("test_blender_vertexanim.abc"))
+        samples = archive.root.children[0].children[0].properties['.geom'].totree(encoder=struct_property_encoder)['P']
+        self.assertEqual(len(samples), 31)

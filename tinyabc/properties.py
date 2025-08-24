@@ -32,6 +32,8 @@ class CompoundProperty:
             (header_node.read_u32, 4),
         ][size_hint]
 
+        metadata_index = -1
+
         # only scalar and array here
         if property_type != 0:
             pod_type = (info >> 4) & 0xF
@@ -88,6 +90,9 @@ class CompoundProperty:
             archive.encoding
         )
         offset += name_size
+
+        if metadata_index == 0xFF:
+            raise A
 
         if property_type == 0:
             parent.children.append(CompoundProperty(name, archive, property_node))
@@ -174,6 +179,14 @@ class Property:
         raise PropertyException("Unsupported pod type: {}".format(self.pod_type_format))
 
     def get_sample(self, _index, encoder=None):
+
+        true_index = self.get_sample_index(_index)        
+
+        if self.pod_type_format not in ("string", "wstring"):
+            sample = self.frames[true_index]
+            return encoder(sample) if encoder else sample
+        
+    def get_sample_index(self, _index):
         if _index >= self.next_sample_index or _index < 0:
             return None
 
@@ -185,9 +198,7 @@ class Property:
         elif _index >= self.last_changed_index:
             true_index = self.last_changed_index - self.first_changed_index + 1
 
-        if self.pod_type_format not in ("string", "wstring"):
-            sample = self.frames[true_index]
-            return encoder(sample) if encoder else sample
+        return true_index
 
 
 class ScalarProperty(Property):
@@ -202,8 +213,8 @@ class ArrayProperty(Property):
             (
                 struct.unpack("<I", child.view)
                 if child.size > 0
-                else (node.children[_index * 2].size - 16) // self.get_pod_size()
+                else ((node.children[_index * 2].size - 16) // self.get_pod_size(),)
             )
             for _index, child in enumerate(node.children[1::2])
         ]
-        self.num_elements = math.prod(self.dims)
+        self.num_elements = [math.prod(dims) for dims in self.dims]

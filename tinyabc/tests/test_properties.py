@@ -31,7 +31,7 @@ class TestProperties(unittest.TestCase):
     def test_blender_dims(self):
         archive = Archive.from_filename(get_fixture("test_blender_anim.abc"))
         self.assertEqual(
-            archive["/MovingNode"].properties[".xform"][".animChans"].dims, [1]
+            archive["/MovingNode"].properties[".xform"][".animChans"].dims, [(1,)]
         )
 
     def test_blender_cube(self):
@@ -173,6 +173,6 @@ class TestProperties(unittest.TestCase):
             "Attribute"
         ]
         self.assertAlmostEqual(vertex_colors[".vals"].num_samples, 1)
-        self.assertAlmostEqual(vertex_colors[".vals"].num_elements, 128)
+        self.assertAlmostEqual(vertex_colors[".vals"].num_elements, [128])
         self.assertAlmostEqual(vertex_colors[".indices"].num_samples, 1)
-        self.assertAlmostEqual(vertex_colors[".indices"].num_elements, 128)
+        self.assertAlmostEqual(vertex_colors[".indices"].num_elements, [128])

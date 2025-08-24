@@ -18,10 +18,10 @@ def struct_property_encoder(prop):
         ]
     else:
         samples = []
-        offset = 0
         for i in range(0, prop.num_samples):
             items = []
-            for j in range(prop.num_elements):
+            offset = 0
+            for j in range(prop.num_elements[prop.get_sample_index(i)]):
                 chunk = prop.get_sample(i)[offset : offset + prop.get_pod_size()]
                 offset += prop.get_pod_size()
                 items.append(

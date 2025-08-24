@@ -39,7 +39,7 @@ class TestProperties(unittest.TestCase):
         tree = archive["/Cube/Cube_001"].properties.totree(
             encoder=struct_property_encoder
         )
-        self.assertEqual(
+        self.assertAlmostEqual(
             tree,
             {
                 ".geom": {

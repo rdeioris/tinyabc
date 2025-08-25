@@ -182,9 +182,8 @@ class Property:
 
         true_index = self.get_sample_index(_index)
 
-        if self.pod_type_format not in ("string", "wstring"):
-            sample = self._samples[true_index]
-            return encoder(sample) if encoder else sample
+        sample = self._samples[true_index]
+        return encoder(sample) if encoder else sample
 
     def get_sample_index(self, _index):
         if _index >= self.next_sample_index or _index < 0:
@@ -211,9 +210,21 @@ class ArrayProperty(Property):
         self._samples = [child.view[16:] for child in node.children[::2]]
         self.dims = [
             (
-                struct.unpack("<I", child.view)
+                struct.unpack("<{}Q".format(child.size // 8), child.view)
                 if child.size > 0
-                else ((node.children[_index * 2].size - 16) // self.get_pod_size(),)
+                else (
+                    (
+                        ((node.children[_index * 2].size - 16) // self.get_pod_size())
+                        if self.pod_type_format not in ("string", "wstring")
+                        else node.children[_index * 2]
+                        .view[16:]
+                        .count(
+                            b"\x00"
+                            if self.pod_type_format == "string"
+                            else b"\x00\x00\x00\x00"  # wstring
+                        )
+                    ),
+                )
             )
             for _index, child in enumerate(node.children[1::2])
         ]

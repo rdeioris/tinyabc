@@ -1,9 +1,9 @@
 import unittest
 from tinyabc.archive import Archive
-from .utils import get_fixture
+from .utils import get_fixture, struct_property_encoder
 
 
-class TestOgawa(unittest.TestCase):
+class TestArchive(unittest.TestCase):
 
     def test_empty_metadata(self):
         archive = Archive.from_filename(get_fixture("test_ogawa_empty.abc"))
@@ -150,12 +150,41 @@ class TestOgawa(unittest.TestCase):
             archive.root.__getitem__,
             999,
         )
-        
+
     def test_blender_tree_traverse(self):
-        archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
+        archive = Archive.from_filename(
+            get_fixture("test_blender_light_with_custom_properties.abc")
+        )
+        tracker = {}
         tree = {}
+
         def _tree_filler(parent, node):
+            node_dict = {
+                "name": node.name,
+                "metadata": node.metadata,
+                "properties": node.properties.totree(encoder=struct_property_encoder),
+                "children": [],
+            }
+            tracker[node] = node_dict
             if parent:
-                tree[parent.name] = node
+                tracker[parent]["children"].append(node_dict)
+            else:
+                tree.update(node_dict)
+
         archive.root.traverse(_tree_filler)
-        print(tree)
+        self.assertEqual(
+            len(tree["children"][0]["properties"][".xform"][".userProperties"].keys()),
+            3,
+        )
+        self.assertTrue(
+            "prop_001"
+            in tree["children"][0]["properties"][".xform"][".userProperties"].keys()
+        )
+        self.assertTrue(
+            "test001"
+            in tree["children"][0]["properties"][".xform"][".userProperties"].keys()
+        )
+        self.assertTrue(
+            "test002"
+            in tree["children"][0]["properties"][".xform"][".userProperties"].keys()
+        )

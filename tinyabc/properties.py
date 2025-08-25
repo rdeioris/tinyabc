@@ -171,7 +171,7 @@ class Property:
         self.first_changed_index = first_changed_index
         self.last_changed_index = last_changed_index
         self.metadata = meta
-        self.setup_frames(node)
+        self.setup_samples(node)
 
     def get_pod_size(self):
         if self.pod_type_format not in ("string", "wstring"):
@@ -180,12 +180,12 @@ class Property:
 
     def get_sample(self, _index, encoder=None):
 
-        true_index = self.get_sample_index(_index)        
+        true_index = self.get_sample_index(_index)
 
         if self.pod_type_format not in ("string", "wstring"):
-            sample = self.frames[true_index]
+            sample = self._samples[true_index]
             return encoder(sample) if encoder else sample
-        
+
     def get_sample_index(self, _index):
         if _index >= self.next_sample_index or _index < 0:
             return None
@@ -202,13 +202,13 @@ class Property:
 
 
 class ScalarProperty(Property):
-    def setup_frames(self, node):
-        self.frames = [child.view[16:] for child in node.children]
+    def setup_samples(self, node):
+        self._samples = [child.view[16:] for child in node.children]
 
 
 class ArrayProperty(Property):
-    def setup_frames(self, node):
-        self.frames = [child.view[16:] for child in node.children[::2]]
+    def setup_samples(self, node):
+        self._samples = [child.view[16:] for child in node.children[::2]]
         self.dims = [
             (
                 struct.unpack("<I", child.view)

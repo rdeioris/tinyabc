@@ -171,3 +171,10 @@ class Object:
         return registered_schemas[self.get_schema()](
             self, default_property_encoder=default_property_encoder
         )
+    
+    def traverse(self, func):
+        def _process_node(parent, node):
+            func(parent, node)
+            for child in node.children:
+                _process_node(node, child)
+        _process_node(self.parent, self)

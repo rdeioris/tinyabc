@@ -176,3 +176,53 @@ class TestProperties(unittest.TestCase):
         self.assertAlmostEqual(vertex_colors[".vals"].num_elements, 128)
         self.assertAlmostEqual(vertex_colors[".indices"].num_samples, 1)
         self.assertAlmostEqual(vertex_colors[".indices"].num_elements, 128)
+
+    def test_blender_plane(self):
+        archive = Archive.from_filename(get_fixture("test_blender_plane.abc"))
+        tree = archive["/Plane/Plane"].properties.totree(
+            encoder=struct_property_encoder
+        )
+        self.assertEqual(
+            tree,
+            {
+                ".geom": {
+                    ".selfBnds": [(-1.0, 0.0, -1.0, 1.0, 0.0, 1.0)],
+                    "P": [
+                        [
+                            (-1.0, 0.0, 1.0),
+                            (1.0, 0.0, 1.0),
+                            (-1.0, 0.0, -1.0),
+                            (1.0, 0.0, -1.0),
+                        ]
+                    ],
+                    ".faceIndices": [[2, 3, 1, 0]],
+                    ".faceCounts": [[4]],
+                    ".userProperties": {"meshtype": [True]},
+                    ".arbGeomParams": {
+                        "Attribute": {
+                            ".vals": [
+                                [
+                                    (0.29411765933036804, 0.8549020290374756, 1.0, 1.0),
+                                    (0.29411765933036804, 0.8549020290374756, 1.0, 1.0),
+                                    (0.29411765933036804, 0.8549020290374756, 1.0, 1.0),
+                                    (0.29411765933036804, 0.8549020290374756, 1.0, 1.0),
+                                ]
+                            ],
+                            ".indices": [[0, 1, 2, 3]],
+                        }
+                    },
+                    "uv": {
+                        ".vals": [[(0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)]],
+                        ".indices": [[0, 1, 2, 3]],
+                    },
+                    "N": [
+                        [
+                            (0.0, 1.0, -0.0),
+                            (0.0, 1.0, -0.0),
+                            (0.0, 1.0, -0.0),
+                            (0.0, 1.0, -0.0),
+                        ]
+                    ],
+                }
+            },
+        )

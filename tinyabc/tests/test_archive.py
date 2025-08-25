@@ -118,7 +118,7 @@ class TestOgawa(unittest.TestCase):
             },
         )
 
-    def test_blender_cube_tree(self):
+    def test_blender_tree(self):
         archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
         self.assertEqual(
             archive[
@@ -127,7 +127,7 @@ class TestOgawa(unittest.TestCase):
             "Node_001_001_002_001",
         )
 
-    def test_blender_cube_tree_wrong_path(self):
+    def test_blender_tree_wrong_path(self):
         archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
         self.assertRaises(
             KeyError,
@@ -135,7 +135,7 @@ class TestOgawa(unittest.TestCase):
             "/Node_001/Node_001_001/Node_001_002_002/Node_001_001_002_001",
         )
 
-    def test_blender_cube_tree_wrong_name(self):
+    def test_blender_tree_wrong_name(self):
         archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
         self.assertRaises(
             KeyError,
@@ -143,10 +143,19 @@ class TestOgawa(unittest.TestCase):
             "Node_Test",
         )
 
-    def test_blender_cube_tree_wrong_index(self):
+    def test_blender_tree_wrong_index(self):
         archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
         self.assertRaises(
             IndexError,
             archive.root.__getitem__,
             999,
         )
+        
+    def test_blender_tree_traverse(self):
+        archive = Archive.from_filename(get_fixture("test_blender_tree.abc"))
+        tree = {}
+        def _tree_filler(parent, node):
+            if parent:
+                tree[parent.name] = node
+        archive.root.traverse(_tree_filler)
+        print(tree)
